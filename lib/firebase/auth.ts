@@ -17,6 +17,8 @@ export interface VellaUser {
   role: UserRole
   walletBalance: number
   driverDocs?: string[]
+  gender?: 'male' | 'female' | 'other'
+  safeSisterEnabled?: boolean
   createdAt: unknown
 }
 
@@ -73,9 +75,19 @@ export async function cashOutFunds(uid: string, amount: number): Promise<void> {
   })
 }
 
-export async function updateUserProfileDetails(uid: string, displayName: string): Promise<void> {
+export async function updateUserProfileDetails(
+  uid: string, 
+  displayName: string,
+  gender?: 'male' | 'female' | 'other',
+  safeSisterEnabled?: boolean
+): Promise<void> {
   const userRef = doc(db, 'users', uid)
-  await updateDoc(userRef, { displayName })
+  
+  const updates: any = { displayName }
+  if (gender) updates.gender = gender
+  if (safeSisterEnabled !== undefined) updates.safeSisterEnabled = safeSisterEnabled
+
+  await updateDoc(userRef, updates)
   
   if (auth.currentUser && auth.currentUser.uid === uid) {
     await updateProfile(auth.currentUser, { displayName })

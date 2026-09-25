@@ -13,12 +13,15 @@ import {
 import { db } from './config'
 
 export type TripStatus = 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled'
+export type RideType = 'standard' | 'safesister' | 'aviation'
 
 export interface Trip {
   id: string
   passengerId: string
   driverId: string | null
   status: TripStatus
+  rideType: RideType
+  passengerGender?: 'male' | 'female' | 'other'
   pickup: string
   dropoff: string
   fare: number
@@ -42,7 +45,9 @@ export async function createTripRequest(
   passengerId: string, 
   pickup: string, 
   dropoff: string, 
-  fare: number
+  fare: number,
+  rideType: RideType = 'standard',
+  passengerGender?: 'male' | 'female' | 'other'
 ): Promise<string> {
   const tripRef = doc(collection(db, 'trips'))
   
@@ -51,6 +56,8 @@ export async function createTripRequest(
     passengerId,
     driverId: null,
     status: 'searching',
+    rideType,
+    passengerGender,
     pickup,
     dropoff,
     fare,
@@ -99,6 +106,7 @@ export function subscribeToPassengerTrip(
 
 // 5. Driver listens for new ride offers
 export function subscribeToAvailableTrips(
+  driverProfile: { gender?: 'male'|'female'|'other', safeSisterEnabled?: boolean } | null,
   callback: (trips: Trip[]) => void
 ) {
   const q = query(
@@ -108,7 +116,17 @@ export function subscribeToAvailableTrips(
   )
   
   return onSnapshot(q, (snapshot) => {
-    const trips = snapshot.docs.map(doc => doc.data() as Trip)
+    let trips = snapshot.docs.map(doc => doc.data() as Trip)
+    
+    // Client-side filtering for SafeSister to avoid composite index requirement
+    if (driverProfile?.safeSisterEnabled && driverProfile.gender === 'female') {
+      // Driver wants ONLY SafeSister rides
+      trips = trips.filter(t => t.rideType === 'safesister')
+    } else {
+      // Driver is male or hasn't enabled SafeSister -> hide SafeSister rides
+      trips = trips.filter(t => t.rideType !== 'safesister')
+    }
+
     callback(trips)
   })
 }

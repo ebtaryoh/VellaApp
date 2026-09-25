@@ -18,6 +18,7 @@ const screens = [
   { id: 'offer', href: '/driver/offer', label: 'Trip offer', eyebrow: 'Driver' },
   { id: 'escrow', href: '/driver/escrow', label: 'Escrow resolution', eyebrow: 'Driver' },
   { id: 'onboarding', href: '/driver/onboarding', label: 'Documents', eyebrow: 'Driver' },
+  { id: 'driver-profile', href: '/driver/profile', label: 'Settings', eyebrow: 'Driver' },
 ]
 
 export function Shell({ children }: { children: React.ReactNode }) {

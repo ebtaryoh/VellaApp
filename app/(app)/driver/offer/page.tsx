@@ -8,19 +8,20 @@ import { subscribeToAvailableTrips, acceptTrip, type Trip } from '@/lib/firebase
 import { useAuth } from '@/context/auth-context'
 
 export default function OfferScreen() { 
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const router = useRouter()
   const [accepted, setAccepted] = useState(false)
   const [availableTrips, setAvailableTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = subscribeToAvailableTrips((trips) => {
+    // Pass profile to handle SafeSister filtering
+    const unsubscribe = subscribeToAvailableTrips(profile, (trips) => {
       setAvailableTrips(trips)
       setLoading(false)
     })
     return () => unsubscribe()
-  }, [])
+  }, [profile])
 
   const currentTrip = availableTrips[0] // Just show the first available one for MVP
 

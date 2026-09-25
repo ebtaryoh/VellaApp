@@ -148,32 +148,6 @@ export default function ProfilePage() {
 
           </div>
         </div>
-
-        <div className="settings-section">
-          <h3>Saved Places</h3>
-          
-          <div className="setting-card">
-            <div className="setting-row">
-              <div className="setting-icon"><MapPin /></div>
-              <div className="setting-content">
-                <small>Home</small>
-                <b>Not set</b>
-              </div>
-              <button className="text-link">Add</button>
-            </div>
-            
-            <div className="setting-divider" />
-            
-            <div className="setting-row">
-              <div className="setting-icon"><MapPin /></div>
-              <div className="setting-content">
-                <small>Work</small>
-                <b>Not set</b>
-              </div>
-              <button className="text-link">Add</button>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

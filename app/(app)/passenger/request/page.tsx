@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { MapPin, Radio, ShieldCheck, AirVent, Sparkles, ArrowUpRight, WalletCards, Route as CarIcon } from 'lucide-react'
+import { MapPin, Radio, ShieldCheck, AirVent, Sparkles, ArrowUpRight, WalletCards, Route as CarIcon, AlertTriangle } from 'lucide-react'
 import { LiveMap } from '@/components/shared/live-map'
-import { createTripRequest } from '@/lib/firebase/trips'
+import { createTripRequest, type RideType } from '@/lib/firebase/trips'
 import { useAuth } from '@/context/auth-context'
 import { LocationSearch } from '@/components/shared/location-search'
 import { usePaystackPayment } from 'react-paystack'
@@ -16,6 +16,15 @@ export default function RequestScreen() {
   const [pickup, setPickup] = useState('Victoria Island, Lagos')
   const [dropoff, setDropoff] = useState('Murtala Muhammed Int. Airport')
   const [fare, setFare] = useState(4850)
+  
+  const isFemale = profile?.gender === 'female'
+  const [safeSister, setSafeSister] = useState(false)
+  
+  useEffect(() => {
+    if (profile && profile.safeSisterEnabled && isFemale) {
+      setSafeSister(true)
+    }
+  }, [profile, isFemale])
 
   const config = {
     reference: (new Date()).getTime().toString(),
@@ -28,7 +37,8 @@ export default function RequestScreen() {
 
   const onSuccess = async () => {
     try {
-      await createTripRequest(user!.uid, pickup, dropoff, fare)
+      const rideType: RideType = safeSister ? 'safesister' : 'standard'
+      await createTripRequest(user!.uid, pickup, dropoff, fare, rideType, profile?.gender)
       router.push('/passenger/trip')
     } catch (error) {
       console.error(error)
@@ -100,10 +110,19 @@ export default function RequestScreen() {
         <div className="feature-row">
           <Sparkles className="violet"/>
           <div>
-            <b>SafeSister<span className="violet">™</span></b>
+            <div className="flex items-center gap-2">
+              <b>SafeSister<span className="violet">™</span></b>
+            </div>
             <small>Female-only driver matching</small>
+            {!isFemale && <small className="text-pink-400 block mt-1">Available for female passengers only. Set gender in profile.</small>}
           </div>
-          <i className="toggle"/>
+          <button 
+            disabled={!isFemale}
+            onClick={() => setSafeSister(!safeSister)}
+            className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${safeSister ? 'bg-pink-500' : 'bg-[#333]'} ${!isFemale ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${safeSister ? 'translate-x-6' : ''}`} />
+          </button>
         </div>
         <button 
           onClick={handleRequest} 
