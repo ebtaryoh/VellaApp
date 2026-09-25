@@ -3,51 +3,66 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Radio, ShieldCheck, AirVent, Sparkles, ArrowUpRight, WalletCards, Route as CarIcon } from 'lucide-react'
-import { MapBackground } from '@/components/shared/map-background'
+import { LiveMap } from '@/components/shared/live-map'
 import { createTripRequest } from '@/lib/firebase/trips'
 import { useAuth } from '@/context/auth-context'
+import { LocationSearch } from '@/components/shared/location-search'
+import { usePaystackPayment } from 'react-paystack'
 
 export default function RequestScreen() { 
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const router = useRouter()
   const [requested, setRequested] = useState(false); 
+  const [pickup, setPickup] = useState('Victoria Island, Lagos')
+  const [dropoff, setDropoff] = useState('Murtala Muhammed Int. Airport')
+  const [fare, setFare] = useState(4850)
 
-  async function handleRequest() {
-    if (!user) return
-    setRequested(true)
+  const config = {
+    reference: (new Date()).getTime().toString(),
+    email: profile?.email || 'user@example.com',
+    amount: fare * 100, // Paystack amount is in kobo (kobo = 1/100 Naira)
+    publicKey: process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY || 'pk_test_mock_key',
+  };
+
+  const initializePayment = usePaystackPayment(config);
+
+  const onSuccess = async () => {
     try {
-      await createTripRequest(
-        user.uid,
-        'Murtala Muhammed Int. Airport', // Mock pickup
-        'Eko Hotels & Suites', // Mock dropoff
-        4850 // Mock fare
-      )
-      // Redirect to the active trip screen which will now listen for this trip
+      await createTripRequest(user!.uid, pickup, dropoff, fare)
       router.push('/passenger/trip')
     } catch (error) {
       console.error(error)
       setRequested(false)
     }
+  };
+
+  const onClose = () => {
+    setRequested(false);
+  }
+
+  async function handleRequest() {
+    if (!user) return
+    setRequested(true)
+    initializePayment({ onSuccess, onClose })
   }
 
   return (
     <div className="screen-stack home-screen">
-      <div className="hero-map">
-        <MapBackground/>
-        <div className="hero-brand">
-          <span>VELLA</span>
-          <small>Your journey, elevated.</small>
+      <div className="hero-map relative w-full h-[45vh]">
+        <LiveMap />
+        <div className="hero-brand absolute top-6 left-6 z-10">
+          <span className="text-white font-bold tracking-wider text-xl">VELLA</span>
+          <small className="block text-slate-300">Your journey, elevated.</small>
         </div>
-        <button className="icon-button map-action" aria-label="Center location">
-          <Radio />
-        </button>
-        <div className="destination-search">
-          <MapPin/>
-          <span>Where would you like to go?</span>
-          <kbd>⌘ K</kbd>
+        
+        <div className="absolute bottom-10 left-4 right-4 z-20">
+          <LocationSearch 
+            placeholder="Where would you like to go?" 
+            onSelectPlace={(address, lat, lng) => setDropoff(address)} 
+          />
         </div>
       </div>
-      <section className="ride-panel">
+      <section className="ride-panel relative z-30">
         <div className="grabber"/>
         <div className="panel-heading">
           <div>
