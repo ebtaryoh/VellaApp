@@ -54,9 +54,9 @@ export default function TripScreen() {
     )
   }
 
-  let statusTitle = "Looking for a driver"
-  if (trip.status === 'accepted') statusTitle = "Driver is on the way"
-  if (trip.status === 'arrived') statusTitle = "Driver has arrived"
+  let statusTitle = trip.rideType === 'aviation' ? "Aviation Concierge Requested" : "Looking for a driver"
+  if (trip.status === 'accepted') statusTitle = trip.rideType === 'aviation' ? "Driver heading to airport" : "Driver is on the way"
+  if (trip.status === 'arrived') statusTitle = trip.rideType === 'aviation' ? "Driver is at arrivals" : "Driver has arrived"
   if (trip.status === 'in_progress') statusTitle = "Your ride is in motion"
 
   return (

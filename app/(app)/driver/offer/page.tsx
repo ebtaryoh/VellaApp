@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Radio, Route, CircleDollarSign, Check, MapPin } from 'lucide-react'
+import { Radio, Route, CircleDollarSign, Check, MapPin, Plane, Sparkles } from 'lucide-react'
 import { Topbar } from '@/components/shared/topbar'
 import { useRouter } from 'next/navigation'
 import { subscribeToAvailableTrips, acceptTrip, type Trip } from '@/lib/firebase/trips'
@@ -79,6 +79,20 @@ export default function OfferScreen() {
         <span className="offer-timer">00:18</span>
       </div>
       <div className="route-card">
+        {currentTrip.rideType === 'aviation' && (
+          <div className="bg-[#1f1f1f] p-3 rounded-xl mb-4 border border-[#cca355]/30">
+            <div className="flex items-center gap-2 text-[#cca355] mb-1">
+              <Plane className="w-4 h-4" /> <strong>Aviation Concierge</strong>
+            </div>
+            <div className="text-sm">Flight: <b>{currentTrip.flightNumber}</b></div>
+            {currentTrip.meetAndGreet && (
+              <div className="text-sm flex items-center gap-1 mt-1">
+                <Sparkles className="w-3 h-3 text-pink-400"/> 
+                <span className="text-slate-300">Passenger requested Meet & Greet at arrivals</span>
+              </div>
+            )}
+          </div>
+        )}
         <div className="route-line">
           <span className="pickup"/>
           <div>

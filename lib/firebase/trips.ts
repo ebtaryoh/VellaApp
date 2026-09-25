@@ -22,6 +22,8 @@ export interface Trip {
   status: TripStatus
   rideType: RideType
   passengerGender?: 'male' | 'female' | 'other'
+  flightNumber?: string
+  meetAndGreet?: boolean
   pickup: string
   dropoff: string
   fare: number
@@ -47,7 +49,9 @@ export async function createTripRequest(
   dropoff: string, 
   fare: number,
   rideType: RideType = 'standard',
-  passengerGender?: 'male' | 'female' | 'other'
+  passengerGender?: 'male' | 'female' | 'other',
+  flightNumber?: string,
+  meetAndGreet?: boolean
 ): Promise<string> {
   const tripRef = doc(collection(db, 'trips'))
   
@@ -58,6 +62,8 @@ export async function createTripRequest(
     status: 'searching',
     rideType,
     passengerGender,
+    flightNumber: flightNumber || null,
+    meetAndGreet: meetAndGreet || false,
     pickup,
     dropoff,
     fare,

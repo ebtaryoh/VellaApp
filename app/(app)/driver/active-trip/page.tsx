@@ -112,6 +112,19 @@ export default function ActiveTripScreen() {
           </div>
 
           <div className="bg-[#111] border border-[#222] rounded-xl p-4 mb-6">
+            {trip.rideType === 'aviation' && (
+              <div className="mb-4 pb-4 border-b border-[#222]">
+                <div className="flex items-center gap-2 text-[#cca355] mb-2">
+                  <span className="font-bold">Aviation Concierge</span>
+                </div>
+                <div className="text-sm mb-1">Flight Number: <b className="text-white">{trip.flightNumber}</b></div>
+                {trip.meetAndGreet && (
+                  <div className="text-sm text-pink-400">
+                    * Passenger requested Meet & Greet inside the arrivals terminal.
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
               <span className="text-sm font-medium">Pickup: {trip.pickup}</span>
