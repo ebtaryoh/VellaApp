@@ -16,6 +16,7 @@ export interface VellaUser {
   displayName: string
   role: UserRole
   walletBalance: number
+  driverDocs?: string[]
   createdAt: unknown
 }
 
@@ -79,4 +80,9 @@ export async function updateUserProfileDetails(uid: string, displayName: string)
   if (auth.currentUser && auth.currentUser.uid === uid) {
     await updateProfile(auth.currentUser, { displayName })
   }
+}
+
+export async function updateDriverDocuments(uid: string, docUrls: string[]): Promise<void> {
+  const userRef = doc(db, 'users', uid)
+  await updateDoc(userRef, { driverDocs: docUrls })
 }
