@@ -2,23 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, User, ArrowRight, X } from 'lucide-react'
+import { Check, User, ArrowRight, X, MessageSquare } from 'lucide-react'
 import { Topbar } from '@/components/shared/topbar'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth-context'
 import { subscribeToDriverTrip, updateTripStatus, updateDriverLocation, type Trip } from '@/lib/firebase/trips'
 import { LiveMap } from '@/components/shared/live-map'
 import { AdvancedMarker } from '@vis.gl/react-google-maps'
+import { ChatDrawer } from '@/components/shared/chat-drawer'
 
 export default function ActiveTripScreen() { 
   const { user } = useAuth()
   const router = useRouter()
   const [trip, setTrip] = useState<Trip | null>(null)
   const [driverPos, setDriverPos] = useState<{lat: number, lng: number} | null>(null)
+  const [showChat, setShowChat] = useState(false)
   
   useEffect(() => {
     if (!user) return
     const unsubscribe = subscribeToDriverTrip(user.uid, (activeTrip) => {
+      if (activeTrip?.status === 'completed') setShowChat(false)
       setTrip(activeTrip)
     })
     return () => unsubscribe()
@@ -93,7 +96,12 @@ export default function ActiveTripScreen() {
                 <User />
               </div>
               <div>
-                <h3 className="font-medium text-lg m-0">Passenger</h3>
+                <h3 className="font-medium text-lg m-0 flex items-center gap-2">
+                  Passenger
+                  <button onClick={() => setShowChat(true)} className="p-1.5 bg-[#222] hover:bg-[#333] rounded-full text-white transition-colors">
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
+                </h3>
                 <p className="text-slate-400 text-sm m-0">Secured with Vella Escrow</p>
               </div>
             </div>
@@ -133,6 +141,8 @@ export default function ActiveTripScreen() {
           )}
         </div>
       </div>
+
+      <ChatDrawer tripId={trip.id} isOpen={showChat} onClose={() => setShowChat(false)} />
     </div>
   ) 
 }

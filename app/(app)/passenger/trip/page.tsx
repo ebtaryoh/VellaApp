@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Mic, LockKeyhole, Check, Star, Headphones } from 'lucide-react'
+import { Mic, LockKeyhole, Check, Star, MessageSquare } from 'lucide-react'
 import { Topbar } from '@/components/shared/topbar'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
@@ -10,6 +10,7 @@ import { RatingModal } from '@/components/shared/rating-modal'
 import { LiveMap } from '@/components/shared/live-map'
 import { AdvancedMarker } from '@vis.gl/react-google-maps'
 import { Car } from 'lucide-react'
+import { ChatDrawer } from '@/components/shared/chat-drawer'
 
 export default function TripScreen() { 
   const { user } = useAuth()
@@ -18,12 +19,14 @@ export default function TripScreen() {
   const [trip, setTrip] = useState<Trip | null>(null)
   const [loading, setLoading] = useState(true)
   const [showRating, setShowRating] = useState(false)
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     if (!user) return
     const unsubscribe = subscribeToPassengerTrip(user.uid, (data) => {
       if (data?.status === 'completed' && trip?.status !== 'completed') {
         setShowRating(true)
+        setShowChat(false)
       }
       setTrip(data)
       setLoading(false)
@@ -70,8 +73,8 @@ export default function TripScreen() {
         </LiveMap>
       </div>
       
-      <div className="trip-map z-10 bg-transparent">
-        <div className="trip-top">
+      <div className="trip-map z-10 bg-transparent pointer-events-none">
+        <div className="trip-top pointer-events-auto">
           <Topbar title={statusTitle} kicker="Active trip" onBack={() => router.push('/passenger/request')}/>
           <div className="eta-card">
             {trip.status === 'searching' ? (
@@ -89,20 +92,22 @@ export default function TripScreen() {
             )}
           </div>
         </div>
-        <div className="sos-wrap">
+        
+        <div className="sos-wrap pointer-events-auto">
           <button className={`sos-button ${recording ? 'recording' : ''}`} onClick={() => setRecording(!recording)}>
             <Mic/>
             {recording ? 'Recording' : 'SecureAudio SOS'}
           </button>
           <small>{recording ? 'Audio is encrypted and being shared' : 'Press and hold in an emergency'}</small>
         </div>
-        <div className="escrow-chip">
+        
+        <div className="escrow-chip pointer-events-auto">
           <LockKeyhole/> Escrow secured <Check/>
         </div>
       </div>
       
       {trip.status !== 'searching' && (
-        <section className="driver-profile">
+        <section className="driver-profile z-10 relative pointer-events-auto">
           <div className="avatar-photo">
             AM<span/>
           </div>
@@ -111,9 +116,13 @@ export default function TripScreen() {
             <h2>Amara Okafor <span><Star/> 4.9</span></h2>
             <p>Toyota Highlander · LAG 482 FX</p>
           </div>
-          <button className="icon-button"><Headphones/></button>
+          <button className="icon-button" onClick={() => setShowChat(true)}>
+            <MessageSquare/>
+          </button>
         </section>
       )}
+
+      <ChatDrawer tripId={trip.id} isOpen={showChat} onClose={() => setShowChat(false)} />
 
       <RatingModal 
         isOpen={showRating} 
