@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 1. Users can only read and write their own profile
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // 2. Trips Collection Rules
+    match /trips/{tripId} {
+      // Allow reading if:
+      // a) The user is the passenger who created it
+      // b) The user is the driver assigned to it
+      // c) The trip is currently "searching" (so all online drivers can see the offer)
+      allow read: if request.auth != null && (
+        resource.data.passengerId == request.auth.uid ||
+        resource.data.driverId == request.auth.uid ||
+        resource.data.status == 'searching'
+      );
+
+      // Allow creating if:
+      // a) The user is logged in
+      // b) They are setting themselves as the passenger
+      // c) The initial status is 'searching'
+      allow create: if request.auth != null 
+        && request.resource.data.passengerId == request.auth.uid
+        && request.resource.data.status == 'searching';
+
+      // Allow updating if:
+      // a) A driver is accepting the trip (changing from searching -> accepted)
+      // b) The assigned driver is updating the status (e.g. to completed)
+      allow update: if request.auth != null && (
+        (resource.data.status == 'searching' && request.resource.data.status == 'accepted' && request.resource.data.driverId == request.auth.uid) ||
+        (resource.data.driverId == request.auth.uid && request.resource.data.status in ['arrived', 'in_progress', 'completed'])
+      );
+      
+      allow delete: if false; // Trips should never be deleted, only marked as cancelled
+    }
+  }
+}

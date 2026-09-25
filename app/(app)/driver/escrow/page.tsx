@@ -1,45 +1,82 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Check, LockKeyhole, WalletCards, ShieldCheck } from 'lucide-react'
 import { Topbar } from '@/components/shared/topbar'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/context/auth-context'
+import { useRouter } from 'next/navigation'
+import { subscribeToDriverTrip, updateTripStatus, type Trip } from '@/lib/firebase/trips'
 
 export default function EscrowScreen() { 
-  const [transferred, setTransferred] = useState(false); 
+  const { user } = useAuth()
+  const router = useRouter()
+  const [transferred, setTransferred] = useState(false)
+  const [trip, setTrip] = useState<Trip | null>(null)
+
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = subscribeToDriverTrip(user.uid, (activeTrip) => {
+      setTrip(activeTrip)
+    })
+    return () => unsubscribe()
+  }, [user])
+
+  async function handleComplete() {
+    if (!trip) return
+    setTransferred(true)
+    try {
+      await updateTripStatus(trip.id, 'completed')
+      setTimeout(() => {
+        router.push('/driver/economics')
+      }, 1500)
+    } catch (error) {
+      console.error(error)
+      setTransferred(false)
+    }
+  }
+
+  // If we just completed it, or there is no trip, we just show a generic view or spinner
+  if (!trip && !transferred) {
+    return (
+      <div className="screen-stack content-screen flex items-center justify-center">
+        <span className="auth-spinner" />
+      </div>
+    )
+  }
+
+  const fare = trip?.fare || 0
+
   return (
     <div className="screen-stack content-screen escrow-screen">
       <Topbar title="Trip complete" kicker="Resolution center"/>
       <div className="success-icon"><Check/></div>
       <div className="center-copy">
         <p className="kicker mint-text">Ride completed securely</p>
-        <h2>{transferred ? 'Everything is settled.' : 'Collect cash: ₦4,200'}</h2>
-        <p>{transferred ? 'The ₦800 difference was instantly returned to the passenger wallet.' : 'One last step to close out this ride.'}</p>
+        <h2>{transferred ? 'Everything is settled.' : `Collect cash: ₦${fare.toLocaleString()}`}</h2>
+        <p>{transferred ? 'Escrow has been closed and funds transferred.' : 'One last step to close out this ride.'}</p>
       </div>
       <div className="cash-summary">
-        <span>Passenger paid cash</span>
-        <strong>₦5,000</strong>
-        <small>Exact fare · ₦4,200</small>
+        <span>Total Fare</span>
+        <strong>₦{fare.toLocaleString()}</strong>
+        <small>Secured via Vella Escrow</small>
       </div>
       <div className="transfer-card">
         <div className="transfer-head">
           <div className="lock-icon"><LockKeyhole/></div>
           <div>
             <b>Escrow wallet transfer</b>
-            <small>No change? Return the difference digitally.</small>
+            <small>Funds will be released to your wallet.</small>
           </div>
           <span className="secure-badge"><ShieldCheck/> Secure</span>
         </div>
-        <div className="amount-input">
-          <span>₦</span>
-          <strong>800</strong>
-          <small>to passenger</small>
-        </div>
+        
         <Button 
-          onClick={() => setTransferred(true)} 
-          className={`vella-primary ${transferred ? 'success' : ''}`}
+          onClick={handleComplete} 
+          disabled={transferred}
+          className={`vella-primary ${transferred ? 'success' : ''} border-0 w-full mt-4`}
         >
-          {transferred ? <><Check/> Transfer resolved</> : <><LockKeyhole/> Transfer via escrow</>}
+          {transferred ? <><Check/> Transfer resolved</> : <><LockKeyhole/> Release funds & complete trip</>}
         </Button>
       </div>
       <div className="escrow-foot">
