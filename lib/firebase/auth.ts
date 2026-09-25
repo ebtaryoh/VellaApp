@@ -1,0 +1,57 @@
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut as firebaseSignOut,
+  updateProfile,
+  type User,
+} from 'firebase/auth'
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { auth, db } from './config'
+
+export type UserRole = 'passenger' | 'driver'
+
+export interface VellaUser {
+  uid: string
+  email: string
+  displayName: string
+  role: UserRole
+  createdAt: unknown
+}
+
+export async function signUp(
+  email: string,
+  password: string,
+  displayName: string,
+  role: UserRole
+): Promise<VellaUser> {
+  const credential = await createUserWithEmailAndPassword(auth, email, password)
+  const { user } = credential
+
+  await updateProfile(user, { displayName })
+
+  const vellaUser: VellaUser = {
+    uid: user.uid,
+    email: user.email!,
+    displayName,
+    role,
+    createdAt: serverTimestamp(),
+  }
+
+  await setDoc(doc(db, 'users', user.uid), vellaUser)
+  return vellaUser
+}
+
+export async function signIn(email: string, password: string): Promise<User> {
+  const credential = await signInWithEmailAndPassword(auth, email, password)
+  return credential.user
+}
+
+export async function signOut(): Promise<void> {
+  await firebaseSignOut(auth)
+}
+
+export async function getUserProfile(uid: string): Promise<VellaUser | null> {
+  const snap = await getDoc(doc(db, 'users', uid))
+  if (!snap.exists()) return null
+  return snap.data() as VellaUser
+}
