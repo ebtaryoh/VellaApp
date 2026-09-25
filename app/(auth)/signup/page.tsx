@@ -27,7 +27,7 @@ export default function SignupPage() {
     try {
       await signUp(email, password, name, role)
       if (role === 'driver') {
-        router.push('/driver/economics')
+        router.push('/driver/onboarding')
       } else {
         router.push('/passenger/request')
       }

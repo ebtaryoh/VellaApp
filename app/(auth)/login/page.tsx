@@ -23,7 +23,11 @@ export default function LoginPage() {
       const user = await signIn(email, password)
       const profile = await getUserProfile(user.uid)
       if (profile?.role === 'driver') {
-        router.push('/driver/economics')
+        if (!profile.driverDocs || profile.driverDocs.length < 3) {
+          router.push('/driver/onboarding')
+        } else {
+          router.push('/driver/economics')
+        }
       } else {
         router.push('/passenger/request')
       }
