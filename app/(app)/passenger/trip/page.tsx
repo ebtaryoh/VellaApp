@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Mic, LockKeyhole, Check, Star, Headphones } from 'lucide-react'
-import { MapBackground } from '@/components/shared/map-background'
 import { Topbar } from '@/components/shared/topbar'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/auth-context'
 import { subscribeToPassengerTrip, type Trip } from '@/lib/firebase/trips'
 import { RatingModal } from '@/components/shared/rating-modal'
+import { LiveMap } from '@/components/shared/live-map'
+import { AdvancedMarker } from '@vis.gl/react-google-maps'
+import { Car } from 'lucide-react'
 
 export default function TripScreen() { 
   const { user } = useAuth()
@@ -55,9 +57,20 @@ export default function TripScreen() {
   if (trip.status === 'in_progress') statusTitle = "Your ride is in motion"
 
   return (
-    <div className="screen-stack trip-screen">
-      <div className="trip-map">
-        <MapBackground active={trip.status === 'in_progress'}/>
+    <div className="screen-stack trip-screen relative">
+      <div className="absolute inset-0 z-0">
+        <LiveMap active={trip.status === 'in_progress'} center={trip.driverLocation}>
+          {trip.driverLocation && (
+            <AdvancedMarker position={trip.driverLocation}>
+              <div className="bg-[#000] p-2 rounded-full border-2 border-white shadow-xl flex items-center justify-center transition-all duration-1000 ease-linear">
+                <Car className="w-6 h-6 text-[#E6FF00]" />
+              </div>
+            </AdvancedMarker>
+          )}
+        </LiveMap>
+      </div>
+      
+      <div className="trip-map z-10 bg-transparent">
         <div className="trip-top">
           <Topbar title={statusTitle} kicker="Active trip" onBack={() => router.push('/passenger/request')}/>
           <div className="eta-card">

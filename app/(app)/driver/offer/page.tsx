@@ -29,9 +29,8 @@ export default function OfferScreen() {
     setAccepted(true)
     try {
       await acceptTrip(currentTrip.id, user.uid)
-      // For MVP, assume trip is completed quickly and route to escrow
       setTimeout(() => {
-        router.push('/driver/escrow')
+        router.push('/driver/active-trip')
       }, 1500)
     } catch (err) {
       console.error(err)

@@ -22,7 +22,19 @@ export interface Trip {
   pickup: string
   dropoff: string
   fare: number
+  driverLocation?: {
+    lat: number
+    lng: number
+  }
   createdAt: any
+}
+
+// 0. Update driver's live GPS location for an active trip
+export async function updateDriverLocation(tripId: string, lat: number, lng: number) {
+  const tripRef = doc(db, 'trips', tripId)
+  await updateDoc(tripRef, { 
+    driverLocation: { lat, lng } 
+  })
 }
 
 // 1. Passenger requests a ride
