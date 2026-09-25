@@ -8,8 +8,9 @@ import {
   type ReactNode,
 } from 'react'
 import { onAuthStateChanged, type User } from 'firebase/auth'
-import { auth } from '@/lib/firebase/config'
-import { getUserProfile, type VellaUser } from '@/lib/firebase/auth'
+import { doc, onSnapshot } from 'firebase/firestore'
+import { auth, db } from '@/lib/firebase/config'
+import { type VellaUser } from '@/lib/firebase/auth'
 
 interface AuthContextValue {
   user: User | null
@@ -29,17 +30,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+    let profileUnsub: () => void
+
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
+      
+      if (profileUnsub) {
+        profileUnsub()
+      }
+
       if (firebaseUser) {
-        const p = await getUserProfile(firebaseUser.uid)
-        setProfile(p)
+        profileUnsub = onSnapshot(doc(db, 'users', firebaseUser.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            setProfile(docSnap.data() as VellaUser)
+          } else {
+            setProfile(null)
+          }
+          setLoading(false)
+        })
       } else {
         setProfile(null)
+        setLoading(false)
       }
-      setLoading(false)
     })
-    return () => unsubscribe()
+    
+    return () => {
+      unsubscribe()
+      if (profileUnsub) profileUnsub()
+    }
   }, [])
 
   return (

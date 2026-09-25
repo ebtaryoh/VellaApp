@@ -1,26 +1,66 @@
 'use client'
 
 import { useState } from 'react'
-import { Activity, BarChart3, CircleDollarSign, Sparkles, ArrowUpRight, Wifi } from 'lucide-react'
+import { Activity, BarChart3, CircleDollarSign, Sparkles, ArrowUpRight, Wifi, Check } from 'lucide-react'
 import { Topbar } from '@/components/shared/topbar'
+import { useAuth } from '@/context/auth-context'
+import { cashOutFunds } from '@/lib/firebase/auth'
+import { useRouter } from 'next/navigation'
 
 export default function EconomicsScreen() { 
-  const [online, setOnline] = useState(false); 
+  const { user, profile } = useAuth()
+  const router = useRouter()
+  const [online, setOnline] = useState(false)
+  const [cashingOut, setCashingOut] = useState(false)
+  const [cashedOut, setCashedOut] = useState(false)
+  
+  const balance = profile?.walletBalance || 0
+
+  async function handleCashOut() {
+    if (!user || balance <= 0) return
+    setCashingOut(true)
+    try {
+      await cashOutFunds(user.uid, balance)
+      setCashedOut(true)
+      setTimeout(() => setCashedOut(false), 3000)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setCashingOut(false)
+    }
+  }
+
+  function handleGoOnline() {
+    setOnline(true)
+    setTimeout(() => {
+      router.push('/driver/offer')
+    }, 500)
+  }
+
+  const firstName = profile?.displayName?.split(' ')[0] || 'Driver'
+
   return (
     <div className="screen-stack content-screen driver-screen">
-      <Topbar title="Good morning, Chidi" kicker="Driver economics"/>
-      <div className="profit-card">
-        <div className="profit-label">
-          <span>Today's net profit</span>
+      <Topbar title={`Good morning, ${firstName}`} kicker="Driver economics"/>
+      
+      <div className="profit-card relative">
+        <div className="profit-label flex justify-between w-full">
+          <span>Net profit balance</span>
           <Activity/>
         </div>
-        <strong>₦38,640</strong>
-        <div className="profit-meta">
-          <span><ArrowUpRight/> 18.4% vs yesterday</span>
-          <small>Updated just now</small>
-        </div>
+        <strong>₦{balance.toLocaleString()}</strong>
+        
+        <button 
+          onClick={handleCashOut}
+          disabled={balance === 0 || cashingOut || cashedOut}
+          className={`mt-4 w-full vella-primary border-0 rounded-xl py-3 flex items-center justify-center gap-2 cursor-pointer ${cashedOut ? 'success' : ''} ${balance === 0 ? 'opacity-50' : ''}`}
+        >
+          {cashingOut ? <span className="auth-spinner" style={{width:16,height:16}}/> : cashedOut ? <Check /> : <CircleDollarSign />}
+          {cashingOut ? 'Processing...' : cashedOut ? 'Cashed Out Successfully' : 'Cash Out Now'}
+        </button>
       </div>
-      <div className="economics-grid">
+
+      <div className="economics-grid mt-4">
         <div className="breakdown-card">
           <div className="card-title">
             <span>Profit composition</span>
@@ -47,6 +87,7 @@ export default function EconomicsScreen() {
           <small>₦8,420 fuel · ₦5,740 fee</small>
         </div>
       </div>
+
       <div className="insight-card">
         <Sparkles/>
         <div>
@@ -55,14 +96,16 @@ export default function EconomicsScreen() {
         </div>
         <ArrowUpRight/>
       </div>
+
       <button 
-        onClick={() => setOnline(!online)} 
-        className={`online-switch ${online ? 'online' : ''}`}
+        onClick={handleGoOnline} 
+        disabled={online}
+        className={`online-switch ${online ? 'online pointer-events-none' : ''}`}
       >
         <span className="switch-orb"><Wifi/></span>
         <span>
           <small>Driver mode</small>
-          <b>{online ? 'GOING ONLINE' : 'GO ONLINE'}</b>
+          <b>{online ? 'CONNECTING TO RADAR...' : 'GO ONLINE'}</b>
         </span>
         <ArrowUpRight/>
       </button>

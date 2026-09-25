@@ -122,3 +122,28 @@ export function subscribeToDriverTrip(
     callback(trip)
   })
 }
+
+// 7. Passenger history
+export function subscribeToPassengerHistory(
+  passengerId: string,
+  callback: (trips: Trip[]) => void
+) {
+  const q = query(
+    collection(db, 'trips'),
+    where('passengerId', '==', passengerId)
+  )
+
+  return onSnapshot(q, (snapshot) => {
+    // Sort in JS to avoid requiring a composite index setup in Firebase for the MVP
+    const trips = snapshot.docs
+      .map(doc => doc.data() as Trip)
+      .filter(t => t.status === 'completed' || t.status === 'cancelled')
+      .sort((a, b) => {
+        const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return timeB - timeA;
+      })
+      
+    callback(trips)
+  })
+}

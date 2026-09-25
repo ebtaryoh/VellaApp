@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/context/auth-context'
 import { useRouter } from 'next/navigation'
 import { subscribeToDriverTrip, updateTripStatus, type Trip } from '@/lib/firebase/trips'
+import { addFundsToWallet } from '@/lib/firebase/auth'
 
 export default function EscrowScreen() { 
   const { user } = useAuth()
@@ -23,10 +24,13 @@ export default function EscrowScreen() {
   }, [user])
 
   async function handleComplete() {
-    if (!trip) return
+    if (!trip || !user) return
     setTransferred(true)
     try {
       await updateTripStatus(trip.id, 'completed')
+      // Instantly deposit the fare into the driver's wallet!
+      await addFundsToWallet(user.uid, trip.fare)
+      
       setTimeout(() => {
         router.push('/driver/economics')
       }, 1500)

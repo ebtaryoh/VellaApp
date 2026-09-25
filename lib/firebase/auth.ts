@@ -5,7 +5,7 @@ import {
   updateProfile,
   type User,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc, serverTimestamp, updateDoc, increment } from 'firebase/firestore'
 import { auth, db } from './config'
 
 export type UserRole = 'passenger' | 'driver'
@@ -15,6 +15,7 @@ export interface VellaUser {
   email: string
   displayName: string
   role: UserRole
+  walletBalance: number
   createdAt: unknown
 }
 
@@ -34,6 +35,7 @@ export async function signUp(
     email: user.email!,
     displayName,
     role,
+    walletBalance: 0,
     createdAt: serverTimestamp(),
   }
 
@@ -54,4 +56,18 @@ export async function getUserProfile(uid: string): Promise<VellaUser | null> {
   const snap = await getDoc(doc(db, 'users', uid))
   if (!snap.exists()) return null
   return snap.data() as VellaUser
+}
+
+export async function addFundsToWallet(uid: string, amount: number): Promise<void> {
+  const userRef = doc(db, 'users', uid)
+  await updateDoc(userRef, {
+    walletBalance: increment(amount)
+  })
+}
+
+export async function cashOutFunds(uid: string, amount: number): Promise<void> {
+  const userRef = doc(db, 'users', uid)
+  await updateDoc(userRef, {
+    walletBalance: increment(-amount)
+  })
 }

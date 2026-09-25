@@ -1,82 +1,88 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { Topbar } from '@/components/shared/topbar'
-import { Map, Clock, ArrowRight, Star } from 'lucide-react'
+import { Clock, ArrowRight, Star } from 'lucide-react'
+import { useAuth } from '@/context/auth-context'
+import { subscribeToPassengerHistory, type Trip } from '@/lib/firebase/trips'
 
 export default function HistoryPage() {
-  const pastTrips = [
-    {
-      id: 'TRP-001',
-      date: 'Yesterday, 4:30 PM',
-      from: 'Murtala Muhammed Int. Airport',
-      to: 'Eko Hotels & Suites, VI',
-      price: '$45.00',
-      driver: 'Kolawole B.',
-      car: 'Mercedes S-Class',
-      rating: 5,
-    },
-    {
-      id: 'TRP-002',
-      date: 'Oct 12, 9:15 AM',
-      from: 'Lekki Phase 1',
-      to: 'Ikoyi Club 1938',
-      price: '$28.50',
-      driver: 'Chinedu O.',
-      car: 'Lexus RX 350',
-      rating: 5,
-    },
-    {
-      id: 'TRP-003',
-      date: 'Sep 28, 11:45 PM',
-      from: 'Quilox',
-      to: 'Victoria Island',
-      price: '$18.00',
-      driver: 'Adebayo T.',
-      car: 'Toyota Camry XLE',
-      rating: 4,
-    }
-  ]
+  const { user } = useAuth()
+  const [pastTrips, setPastTrips] = useState<Trip[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = subscribeToPassengerHistory(user.uid, (trips) => {
+      setPastTrips(trips)
+      setLoading(false)
+    })
+    return () => unsubscribe()
+  }, [user])
+
+  if (loading) {
+    return (
+      <div className="screen-stack">
+        <div className="content-screen flex items-center justify-center">
+          <span className="auth-spinner" />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="screen-stack">
       <div className="content-screen">
         <Topbar title="Ride History" />
         
-        <div className="history-list">
-          {pastTrips.map((trip) => (
-            <div key={trip.id} className="history-card">
-              <div className="history-head">
-                <div className="history-date">
-                  <Clock /> {trip.date}
+        {pastTrips.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <Clock className="w-12 h-12 mb-4 opacity-50" />
+            <p>You haven't taken any rides yet.</p>
+          </div>
+        ) : (
+          <div className="history-list">
+            {pastTrips.map((trip) => {
+              const date = trip.createdAt?.toDate ? trip.createdAt.toDate() : new Date();
+              const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+
+              return (
+                <div key={trip.id} className="history-card">
+                  <div className="history-head">
+                    <div className="history-date">
+                      <Clock /> {formattedDate}
+                    </div>
+                    <strong>₦{trip.fare.toLocaleString()}</strong>
+                  </div>
+                  
+                  <div className="history-route">
+                    <div className="history-point">
+                      <div className="dot start" />
+                      <p>{trip.pickup}</p>
+                    </div>
+                    <div className="history-point">
+                      <div className="dot end" />
+                      <p>{trip.dropoff}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="history-foot">
+                    <div className="history-driver">
+                      {/* Placeholder for driver details until driver profiles are fully stored */}
+                      <div className="driver-mini-avatar">D</div>
+                      <span>Vella Driver • Premium</span>
+                    </div>
+                    <div className="history-rating">
+                      5 <Star className="filled-star" />
+                    </div>
+                  </div>
+                  
+                  <button className="receipt-btn">View Receipt <ArrowRight /></button>
                 </div>
-                <strong>{trip.price}</strong>
-              </div>
-              
-              <div className="history-route">
-                <div className="history-point">
-                  <div className="dot start" />
-                  <p>{trip.from}</p>
-                </div>
-                <div className="history-point">
-                  <div className="dot end" />
-                  <p>{trip.to}</p>
-                </div>
-              </div>
-              
-              <div className="history-foot">
-                <div className="history-driver">
-                  <div className="driver-mini-avatar">{trip.driver.charAt(0)}</div>
-                  <span>{trip.driver} • {trip.car}</span>
-                </div>
-                <div className="history-rating">
-                  {trip.rating} <Star className="filled-star" />
-                </div>
-              </div>
-              
-              <button className="receipt-btn">View Receipt <ArrowRight /></button>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </div>
     </div>
   )
