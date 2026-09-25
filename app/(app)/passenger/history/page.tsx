@@ -5,9 +5,11 @@ import { Topbar } from '@/components/shared/topbar'
 import { Clock, ArrowRight, Star } from 'lucide-react'
 import { useAuth } from '@/context/auth-context'
 import { subscribeToPassengerHistory, type Trip } from '@/lib/firebase/trips'
+import { useRouter } from 'next/navigation'
 
 export default function HistoryPage() {
   const { user } = useAuth()
+  const router = useRouter()
   const [pastTrips, setPastTrips] = useState<Trip[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -77,7 +79,12 @@ export default function HistoryPage() {
                     </div>
                   </div>
                   
-                  <button className="receipt-btn">View Receipt <ArrowRight /></button>
+                  <button 
+                    onClick={() => router.push(`/passenger/receipt/${trip.id}`)}
+                    className="receipt-btn hover:bg-white/10 transition-colors"
+                  >
+                    View Receipt <ArrowRight />
+                  </button>
                 </div>
               )
             })}

@@ -45,9 +45,8 @@ export function LocationSearch({ onSelectPlace, placeholder = "Where to?" }: Loc
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          disabled={!ready}
           placeholder={placeholder}
-          className="w-full bg-transparent border-none outline-none text-sm font-medium placeholder-slate-400"
+          className="w-full bg-transparent border-none outline-none text-sm font-medium text-slate-800 placeholder-slate-400"
         />
         <Navigation className="w-4 h-4 text-[#63d0ff]" />
       </div>

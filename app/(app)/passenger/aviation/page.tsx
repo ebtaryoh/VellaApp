@@ -110,9 +110,11 @@ export default function AviationScreen() {
         </div>
         <button 
           onClick={() => setMeet(!meet)} 
-          className={`toggle ${meet ? 'on amber-toggle' : ''}`} 
+          className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${meet ? 'bg-[#cca355]' : 'bg-[#333]'}`}
           aria-label="Toggle Meet and Greet"
-        />
+        >
+          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${meet ? 'translate-x-7' : 'translate-x-1'}`} />
+        </button>
       </div>
 
       <div className="toll-card mt-4">

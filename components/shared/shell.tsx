@@ -19,6 +19,7 @@ const screens = [
   { id: 'escrow', href: '/driver/escrow', label: 'Escrow resolution', eyebrow: 'Driver' },
   { id: 'onboarding', href: '/driver/onboarding', label: 'Documents', eyebrow: 'Driver' },
   { id: 'driver-profile', href: '/driver/profile', label: 'Settings', eyebrow: 'Driver' },
+  { id: 'admin-verify', href: '/admin/verify', label: 'Driver Verifications', eyebrow: 'Admin' },
 ]
 
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -55,7 +56,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
         )}
 
         <nav aria-label="Vella screens">
-          {screens.map((screen) => {
+          {screens
+            .filter((screen) => {
+              if (screen.eyebrow === 'Admin') return true; // Show admin to everyone for testing
+              return profile?.role === 'driver' ? screen.eyebrow === 'Driver' : screen.eyebrow === 'Passenger'
+            })
+            .map((screen) => {
             const isActive = pathname.startsWith(screen.href)
             return (
               <Link

@@ -5,9 +5,12 @@ import { Topbar } from '@/components/shared/topbar'
 import { useAuth } from '@/context/auth-context'
 import { User, Mail, MapPin, Shield, Edit3, Check, X, Users, Heart } from 'lucide-react'
 import { updateUserProfileDetails } from '@/lib/firebase/auth'
+import { signOut } from '@/lib/firebase/auth'
+import { useRouter } from 'next/navigation'
 
 export default function ProfilePage() {
   const { user, profile } = useAuth()
+  const router = useRouter()
   
   const [isEditing, setIsEditing] = useState(false)
   const [newName, setNewName] = useState('')
@@ -132,9 +135,9 @@ export default function ProfilePage() {
                     {isEditing ? (
                       <button 
                         onClick={() => setSafeSisterEnabled(!safeSisterEnabled)}
-                        className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${safeSisterEnabled ? 'bg-pink-500' : 'bg-[#333]'}`}
+                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${safeSisterEnabled ? 'bg-pink-500' : 'bg-[#333]'}`}
                       >
-                        <div className={`w-4 h-4 rounded-full bg-white transition-transform ${safeSisterEnabled ? 'translate-x-6' : ''}`} />
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${safeSisterEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
                       </button>
                     ) : (
                       <b className={profile?.safeSisterEnabled ? 'text-pink-400' : ''}>
@@ -147,6 +150,18 @@ export default function ProfilePage() {
             )}
 
           </div>
+        </div>
+
+        <div className="mt-8 flex justify-center">
+          <button 
+            onClick={async () => {
+              await signOut()
+              router.replace('/login')
+            }}
+            className="flex items-center gap-2 px-6 py-3 rounded-full border border-red-500/30 text-red-400 bg-red-500/10 hover:bg-red-500/20 transition-colors"
+          >
+            Sign out
+          </button>
         </div>
       </div>
     </div>

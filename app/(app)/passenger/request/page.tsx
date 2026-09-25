@@ -19,6 +19,7 @@ export default function RequestScreen() {
   
   const isFemale = profile?.gender === 'female'
   const [safeSister, setSafeSister] = useState(false)
+  const [climateComfort, setClimateComfort] = useState(true)
   
   useEffect(() => {
     if (profile && profile.safeSisterEnabled && isFemale) {
@@ -105,7 +106,12 @@ export default function RequestScreen() {
             <b>Climate Comfort<span>™</span></b>
             <small>Guaranteed AC, every trip</small>
           </div>
-          <i className="toggle on"/>
+          <button 
+            onClick={() => setClimateComfort(!climateComfort)}
+            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${climateComfort ? 'bg-white' : 'bg-[#333]'}`}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-black transition-transform ${climateComfort ? 'translate-x-7' : 'translate-x-1'}`} />
+          </button>
         </div>
         <div className="feature-row">
           <Sparkles className="violet"/>
@@ -119,9 +125,9 @@ export default function RequestScreen() {
           <button 
             disabled={!isFemale}
             onClick={() => setSafeSister(!safeSister)}
-            className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${safeSister ? 'bg-pink-500' : 'bg-[#333]'} ${!isFemale ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${safeSister ? 'bg-pink-500' : 'bg-[#333]'} ${!isFemale ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            <div className={`w-4 h-4 rounded-full bg-white transition-transform ${safeSister ? 'translate-x-6' : ''}`} />
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${safeSister ? 'translate-x-7' : 'translate-x-1'}`} />
           </button>
         </div>
         <button 

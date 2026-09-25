@@ -17,6 +17,7 @@ export interface VellaUser {
   role: UserRole
   walletBalance: number
   driverDocs?: string[]
+  verificationStatus?: 'pending' | 'approved' | 'rejected'
   gender?: 'male' | 'female' | 'other'
   safeSisterEnabled?: boolean
   createdAt: unknown
@@ -96,5 +97,8 @@ export async function updateUserProfileDetails(
 
 export async function updateDriverDocuments(uid: string, docUrls: string[]): Promise<void> {
   const userRef = doc(db, 'users', uid)
-  await updateDoc(userRef, { driverDocs: docUrls })
+  await updateDoc(userRef, { 
+    driverDocs: docUrls,
+    verificationStatus: 'pending'
+  })
 }

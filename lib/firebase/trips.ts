@@ -8,7 +8,8 @@ import {
   where, 
   serverTimestamp, 
   orderBy,
-  limit
+  limit,
+  getDoc
 } from 'firebase/firestore'
 import { db } from './config'
 
@@ -182,4 +183,12 @@ export function subscribeToPassengerHistory(
       
     callback(trips)
   })
+}
+
+// 8. Fetch a single trip by ID
+export async function getTripById(tripId: string): Promise<Trip | null> {
+  const tripRef = doc(db, 'trips', tripId)
+  const snapshot = await getDoc(tripRef)
+  if (!snapshot.exists()) return null
+  return snapshot.data() as Trip
 }
