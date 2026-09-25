@@ -29,10 +29,10 @@ service cloud.firestore {
 
       // Allow updating if:
       // a) A driver is accepting the trip (changing from searching -> accepted)
-      // b) The assigned driver is updating the status (e.g. to completed)
+      // b) The assigned driver is updating the status or their location
       allow update: if request.auth != null && (
         (resource.data.status == 'searching' && request.resource.data.status == 'accepted' && request.resource.data.driverId == request.auth.uid) ||
-        (resource.data.driverId == request.auth.uid && request.resource.data.status in ['arrived', 'in_progress', 'completed'])
+        (resource.data.driverId == request.auth.uid)
       );
       
       allow delete: if false; // Trips should never be deleted, only marked as cancelled
