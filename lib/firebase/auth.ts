@@ -71,3 +71,12 @@ export async function cashOutFunds(uid: string, amount: number): Promise<void> {
     walletBalance: increment(-amount)
   })
 }
+
+export async function updateUserProfileDetails(uid: string, displayName: string): Promise<void> {
+  const userRef = doc(db, 'users', uid)
+  await updateDoc(userRef, { displayName })
+  
+  if (auth.currentUser && auth.currentUser.uid === uid) {
+    await updateProfile(auth.currentUser, { displayName })
+  }
+}
